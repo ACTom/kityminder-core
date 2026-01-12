@@ -1,20 +1,17 @@
 {
-  "name": "kityminder-core",
-  "title": "Kity Minder Core",
-  "description": "KityMinder Core Implement",
-  "version": "1.4.50",
-  "homepage": "https://github.com/fex-team/kityminder-core",
-  "author": {
-    "name": "Baidu FEX",
-    "url": "http://fex.baidu.com"
-  },
+  "name": "tyminder-core",
+  "title": "TyMinder Core",
+  "description": "TyMinder Core Implement",
+  "version": "2.0.0",
+  "homepage": "https://github.com/ACTom/tyminder-core",
   "main": "dist/kityminder.core.js",
   "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fex-team/kityminder-core.git"
+    "url": "https://github.com/ACTom/tyminder-core.git"
   },
   "keywords": [
+    "tyminder",
     "kityminder",
     "kity",
     "minder",
@@ -27,12 +24,12 @@
     "build": "grunt build"
   },
   "bugs": {
-    "url": "https://github.com/fex-team/kityminder-core/issues"
+    "url": "https://github.com/ACTom/tyminder-core/issues"
   },
   "licenses": [
     {
       "type": "BSD-3-Clause",
-      "url": "https://github.com/fex-team/kityminder-core/blob/dev/LICENSE"
+      "url": "https://github.com/ACTom/tyminder-core/blob/dev/LICENSE"
     }
   ],
   "dependencies": {
@@ -43,6 +40,7 @@
   "devDependencies": {
     "cz-conventional-changelog": "^1.1.5",
     "grunt": "~0.4.1",
+    "grunt-cli": "^1.5.0",
     "grunt-browser-sync": "^2.2.0",
     "grunt-contrib-clean": "~0.5.0",
     "grunt-contrib-concat": "~0.5.0",

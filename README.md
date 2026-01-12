@@ -1,68 +1,88 @@
-KityMinder Core
+TyMinder Core
 ==========
 
 ## 简介
 
-KityMinder 是一款强大的脑图可视化/编辑工具，由百度 FEX 团队开发并维护。
+TyMinder 是基于 [KityMinder Core](https://github.com/fex-team/kityminder-core) 修改的脑图可视化/编辑工具核心库。
 
-本仓库是 KityMinder 的核心实现部分：
+### 原项目
+
+KityMinder 是由百度 FEX 团队开发并维护的强大脑图工具。
+
+### TyMinder 改进
+
+在 KityMinder Core 的基础上，TyMinder 增强了以下功能：
+
+* **自由关联线**：支持任意两个节点之间建立关联连接
+
+
+### 核心功能
+
+本仓库是 TyMinder 的核心实现部分：
 
 * 包括脑图数据的可视化展示（Json 格式）
-* 包括简单的编辑功能（节点创建、编辑、删除）。更加强大编辑功能的 KityMinder 编辑器请移步 [kityminder-editor](https://github.com/fex-team/kityminder-editor)
-* 不包含第三方格式（FreeMind、XMind、MindManager）的支持，可以加载 [kityminder-protocol](https://github.com/fex-team/kityminder-third-party-protocol) 来扩展第三方格式支持。
-* 不包含文件存储的支持，需要自行实现存储。可参照[百度脑图](https://naotu.baidu.com)中的开源的 fio + 百度网盘方案进行实现。
+* 包括简单的编辑功能（节点创建、编辑、删除）
+* 增强的自由关联线功能
+* 不包含第三方格式（FreeMind、XMind、MindManager）的支持
+* 不包含文件存储的支持，需要自行实现存储
 
-## 使用
+## 使用示例
 
-可以参考 [example.html](example.html) 进行使用。
+可以参考 [dev.html](dev.html)、[example.html](example.html) 查看完整示例。
 
-```js
-<div id="minder-container"></div>
-<script type="text/javascript" src="kityminder.core.min.js"></script>
-<script type="text/javascript">
-var minder = new kityminder.Minder({
-	renderTo: '#minder-container'
-});
-</script>
-```
+## 技术栈
 
-更多详细的开发资料可以参考 [wiki](https://github.com/fex-team/kityminder-core/wiki)
+- **图形引擎**：[Kity](https://github.com/fex-team/kity) - 基于 SVG 的矢量图形库
+- **模块加载**：SeaJS
+- **数据格式**：JSON
 
-## 兼容性
+## 浏览器兼容性
 
-KityMinder 基于 SVG 技术实现，支持绝大多数的 HTML5 浏览器，包括：
+TyMinder 基于 SVG 技术实现，支持主流的 HTML5 浏览器：
 
-1. Chrome
-2. Firefox
-3. Safari
-4. Internet Explorer 10 或以上
-
-## 使用说明
-
-kityminder-core 依赖于 [kity](https://github.com/fex-team/kity)，开发中用到 seajs 进行异步加载。
-例子中 dev.html 使用 seajs 进行包加载，example.html 使用同步加载的方式。
-使用步骤如下：
-
-1. 安装 [bower](http://bower.io/#install-bower)
-2. 切换到 kityminder-core 目录下，运行：
-
-```bash
-bower install
-```
+- ✅ Chrome
+- ✅ Firefox
+- ✅ Safari
+- ✅ Edge
+- ✅ Internet Explorer 10+
 
 ## 开发说明
 
-1. 安装 [bower](http://bower.io/#install-bower)
-2. 安装 [npm](https://www.npmjs.com/get-npm)
+### 环境要求
+
+1. 安装 [Node.js](https://nodejs.org/)
+2. 安装 [bower](http://bower.io/#install-bower)
+
+### 开发步骤
 
 ```bash
-bower install
+# 安装依赖
 npm install
+
+# 启动开发服务器
 npm run dev
+
+# 打开 dev.html 查看效果
 ```
 
-## 联系我们
+### 项目结构
 
-问题和建议反馈：[Github Issues](https://github.com/fex-team/kityminder-core/issues)
-邮件组: kity@baidu.com
-QQ 讨论群: 374918234
+```
+src/
+├── connect/          # 连接线样式
+├── core/             # 核心功能
+├── layout/           # 布局算法
+├── module/           # 功能模块
+│   └── hyperconnection.js  # 自由关联线模块 ⭐️
+├── protocol/         # 数据协议
+├── template/         # 主题模板
+└── theme/            # 主题样式
+```
+
+## 致谢
+
+感谢百度 FEX 团队开源的 [KityMinder](https://github.com/fex-team/kityminder-core) 项目，为本项目提供了坚实的基础。
+
+## 许可证
+
+基于原项目的许可证。

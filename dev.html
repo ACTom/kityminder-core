@@ -14,40 +14,130 @@
             height: 100%;
         }
 
+        #toolbar {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        #toolbar button {
+            padding: 8px 16px;
+            margin-right: 8px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #toolbar button:hover {
+            background: #357ae8;
+        }
+
+        #toolbar button:active {
+            background: #2a66c9;
+        }
+
         #minder-view {
             position: absolute;
             border: 1px solid #ccc;
             left: 10px;
-            top: 10px;
+            top: 60px;
             bottom: 10px;
             right: 10px;
+        }
+
+        #status-tip {
+            position: absolute;
+            left: 10px;
+            bottom: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: none;
+            z-index: 1000;
         }
     </style>
 
     <script type="text/javascript" src="node_modules/kity/dist/kity.js"></script>
 </head>
 <body>
+    <!-- 工具栏 -->
+    <div id="toolbar">
+        <button id="btn-add-connection">➕ 添加关联线</button>
+        <button id="btn-export">💾 导出JSON</button>
+        <span id="status-text" style="margin-left: 16px; color: #666;"></span>
+    </div>
+    
+    <!-- 状态提示 -->
+    <div id="status-tip"></div>
+    
     <script id="minder-view" type="application/kityminder" minder-data-type="json">
     {
         "root": {
             "data": {
+                "id": "root",
                 "text": "百度产品",
                 "image": "https://www.baidu.com/img/bd_logo1.png?where=super",
                 "imageSize": { "width": 270, "height": 129 }
             },
             "children": [
-                { "data": { "text": "新闻" } },
-                { "data": { "text": "网页", "priority": 1 } },
-                { "data": { "text": "贴吧", "priority": 2 } },
-                { "data": { "text": "知道", "priority": 2 } },
-                { "data": { "text": "音乐", "priority": 3 } },
-                { "data": { "text": "图片", "priority": 3 } },
-                { "data": { "text": "视频", "priority": 3 } },
-                { "data": { "text": "地图", "priority": 3 } },
-                { "data": { "text": "百科", "priority": 3 } },
-                { "data": { "text": "更多", "hyperlink": "http://www.baidu.com/more" } }
+                { "data": { "id": "news", "text": "新闻" } },
+                { "data": { "id": "web", "text": "网页", "priority": 1 } },
+                { "data": { "id": "tieba", "text": "贴吧", "priority": 2 } },
+                { "data": { "id": "zhidao", "text": "知道", "priority": 2 } },
+                { "data": { "id": "music", "text": "音乐", "priority": 3 } },
+                { "data": { "id": "image", "text": "图片", "priority": 3 } },
+                { "data": { "id": "video", "text": "视频", "priority": 3 } },
+                { "data": { "id": "map", "text": "地图", "priority": 3 } },
+                { "data": { "id": "baike", "text": "百科", "priority": 3 } },
+                { "data": { "id": "more", "text": "更多", "hyperlink": "http://www.baidu.com/more" } }
             ]
-        }
+        },
+        "connections": [
+            {
+                "id": "conn1",
+                "from": "news",
+                "to": "web",
+                "text": "相关",
+                "type": "arrow",
+                "color": "#4285f4",
+                "strokeWidth": 2,
+                "controlPoint1": { "x": 0, "y": 0 },
+                "controlPoint2": { "x": 0, "y": 0 }
+            },
+            {
+                "id": "conn2",
+                "from": "music",
+                "to": "more",
+                "text": "多媒体",
+                "type": "arrow",
+                "color": "#34a853",
+                "strokeWidth": 2,
+                "controlPoint1": { "x": 0, "y": 0 },
+                "controlPoint2": { "x": 0, "y": 0 }
+            },
+            {
+                "id": "conn3",
+                "from": "tieba",
+                "to": "zhidao",
+                "text": "社区产品",
+                "type": "line",
+                "color": "#ea4335",
+                "strokeWidth": 2,
+                "controlPoint1": { "x": 0, "y": 0 },
+                "controlPoint2": { "x": 0, "y": 0 }
+            }
+        ]
     }
     </script>
 </body>
@@ -65,6 +155,93 @@
         // 创建 km 实例
         var km = window.km = new Minder();
         km.setup('#minder-view');
+        
+        // 工具栏按钮事件
+        var btnAddConnection = document.getElementById('btn-add-connection');
+        var btnExport = document.getElementById('btn-export');
+        var statusText = document.getElementById('status-text');
+        var statusTip = document.getElementById('status-tip');
+        
+        // 添加关联线按钮
+        btnAddConnection.addEventListener('click', function() {
+            var canExecute = km.queryCommandState('StartHyperConnection');
+            if (canExecute === 0) {
+                km.execCommand('StartHyperConnection');
+                showTip('🔗 移动鼠标选择目标节点，点击确认（ESC 取消）');
+            } else {
+                alert('请先选中一个节点作为起点');
+            }
+        });
+        
+        // 更新按钮状态
+        function updateButtonState() {
+            var canExecute = km.queryCommandState('StartHyperConnection');
+            if (canExecute === 0) {
+                btnAddConnection.disabled = false;
+                btnAddConnection.style.opacity = '1';
+            } else {
+                btnAddConnection.disabled = true;
+                btnAddConnection.style.opacity = '0.5';
+            }
+        }
+        
+        // 监听选择变化
+        km.on('selectionchange', function() {
+            updateButtonState();
+        });
+        
+        // 初始化按钮状态
+        updateButtonState();
+        
+        // 导出JSON按钮
+        btnExport.addEventListener('click', function() {
+            var json = km.exportJson();
+            console.log('Exported JSON:', json);
+            alert('JSON 已导出到控制台，按 F12 查看');
+        });
+        
+        // 监听状态变化
+        km.on('statuschange', function(e) {
+            if (e.currentStatus === 'hyperconnection') {
+                statusText.textContent = '🔗 添加关联线模式';
+                btnAddConnection.style.background = '#34a853';
+                btnAddConnection.textContent = '✅ 添加中...';
+            } else {
+                statusText.textContent = '';
+                btnAddConnection.style.background = '#4285f4';
+                btnAddConnection.textContent = '➕ 添加关联线';
+                hideTip();
+            }
+        });
+        
+        // 显示提示
+        function showTip(message) {
+            statusTip.textContent = message;
+            statusTip.style.display = 'block';
+        }
+        
+        // 隐藏提示
+        function hideTip() {
+            statusTip.style.display = 'none';
+        }
+                
+        // 监听连接线双击事件 - 编辑连接线文字
+        km.on('hyperconnectiondblclick', function(e) {
+            var connection = e.connection;  // HyperConnection 对象
+            var data = e.data;              // 连接线数据
+            
+            // 弹出输入框编辑文字
+            var currentText = connection.getText();
+            var newText = prompt('输入连接线文字（留空则删除）:', currentText);
+            
+            if (newText !== null) {
+                // 更新连接线文字
+                connection.setText(newText);
+                
+                // 触发内容变化事件
+                km.fire('contentchange');
+            }
+        });
     });
     seajs.use('start');
 </script>

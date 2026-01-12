@@ -50,6 +50,7 @@ define(function(require, exports, module) {
     require('./module/expand');
     require('./module/font');
     require('./module/hyperlink');
+    require('./module/hyperconnection');
     require('./module/image');
     require('./module/image-viewer');
     require('./module/keynav');

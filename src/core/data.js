@@ -58,6 +58,13 @@ define(function(require, exports, module) {
             function exportNode(node) {
                 var exported = {};
                 exported.data = node.getData();
+                
+                // 确保节点有 ID，如果没有则生成
+                if (!exported.data.id) {
+                    exported.data.id = utils.guid();
+                    node.setData('id', exported.data.id);
+                }
+                
                 var childNodes = node.getChildren();
                 exported.children = [];
                 for (var i = 0; i < childNodes.length; i++) {
@@ -67,12 +74,17 @@ define(function(require, exports, module) {
             }
 
             var json = {
-                root: exportNode(this.getRoot())
+                root: exportNode(this.getRoot()),
+                version: "2"  // 数据格式版本
             };
 
             json.template = this.getTemplate();
             json.theme = this.getTheme();
-            json.version = Minder.version;
+            
+            // 导出自由关联线数据
+            if (this._hyperConnections && this._hyperConnections.length > 0) {
+                json.connections = this._hyperConnections;
+            }
 
             return JSON.parse(JSON.stringify(json));
         },
@@ -196,6 +208,11 @@ define(function(require, exports, module) {
             for (var field in data) {
                 node.setData(field, data[field]);
             }
+            
+            // 确保节点有 ID，如果没有则生成（向后兼容旧格式）
+            if (!node.getData('id')) {
+                node.setData('id', utils.guid());
+            }
 
             var childrenTreeData = json.children || [];
             for (var i = 0; i < childrenTreeData.length; i++) {
@@ -230,11 +247,48 @@ define(function(require, exports, module) {
             }
 
             json = compatibility(json);
+            
+            // 检查和修复 ID冲突
+            var idMap = {};
+            function ensureUniqueId(nodeData) {
+                if (!nodeData.data.id) {
+                    nodeData.data.id = utils.guid();
+                }
+                // 如果ID已存在，重新生成
+                if (idMap[nodeData.data.id]) {
+                    nodeData.data.id = utils.guid();
+                }
+                idMap[nodeData.data.id] = true;
+                
+                // 递归处理子节点
+                if (nodeData.children) {
+                    for (var i = 0; i < nodeData.children.length; i++) {
+                        ensureUniqueId(nodeData.children[i]);
+                    }
+                }
+            }
+            ensureUniqueId(json.root);
 
             this.importNode(this._root, json.root);
 
             this.setTemplate(json.template || 'default');
             this.setTheme(json.theme || null);
+            
+            // 导入自由关联线数据（向后兼容）
+            if (json.connections) {
+                // 验证关联线的节点ID是否存在
+                var validConnections = [];
+                for (var i = 0; i < json.connections.length; i++) {
+                    var conn = json.connections[i];
+                    if (idMap[conn.from] && idMap[conn.to]) {
+                        validConnections.push(conn);
+                    }
+                }
+                this.setHyperConnections(validConnections);
+            } else {
+                this.setHyperConnections([]);
+            }
+            
             this.refresh();
 
             /**
