@@ -186,6 +186,8 @@ define(function(require, exports, module) {
             
             // 创建连线路径（可见的细线）
             this.path = new kity.Path();
+            // 让可见路径不响应鼠标事件，事件穿透到下层的 hitArea
+            this.path.node.setAttribute('pointer-events', 'none');
             this.addShape(this.path);
 
             // 创建箭头标记
