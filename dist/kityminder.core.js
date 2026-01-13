@@ -5678,6 +5678,11 @@ _p[48] = {
                 var self = this;
                 var minder = this.minder;
                 this.textShape = new kity.Text().setContent(text).setSize(12).fill("#666");
+                // 给文字添加单击事件 - 选中连接线
+                this.textShape.on("click", function(e) {
+                    self.select();
+                    e.stopPropagation();
+                });
                 // 给文字添加双击事件
                 this.textShape.on("dblclick", function(e) {
                     // 先选中连接线

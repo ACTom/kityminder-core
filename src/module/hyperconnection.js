@@ -233,6 +233,12 @@ define(function(require, exports, module) {
                 .setContent(text)
                 .setSize(12)
                 .fill('#666');
+            
+            // 给文字添加单击事件 - 选中连接线
+            this.textShape.on('click', function(e) {
+                self.select();
+                e.stopPropagation();
+            });
                         
             // 给文字添加双击事件
             this.textShape.on('dblclick', function(e) {
