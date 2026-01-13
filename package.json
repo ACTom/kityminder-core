@@ -2,7 +2,7 @@
   "name": "tyminder-core",
   "title": "TyMinder Core",
   "description": "TyMinder Core Implement",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "homepage": "https://github.com/ACTom/tyminder-core",
   "main": "dist/kityminder.core.js",
   "license": "BSD-3-Clause",
