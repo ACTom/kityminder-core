@@ -242,6 +242,26 @@
                 km.fire('contentchange');
             }
         });
+        
+        // 监听键盘事件 - Del 键删除选中的连接线
+        document.addEventListener('keydown', function(e) {
+            // Del 键 (keyCode = 46)
+            if (e.keyCode === 46) {
+                var container = km._hyperConnectionContainer;
+                if (!container) return;
+                
+                var shapes = container.getShapes();
+                for (var i = 0; i < shapes.length; i++) {
+                    var shape = shapes[i];
+                    if (shape.isSelected && shape.data) {
+                        // 删除选中的连接线
+                        km.execCommand('RemoveHyperConnection', shape.data.id);
+                        e.preventDefault();
+                        break; // 一次只删除一条
+                    }
+                }
+            }
+        });
     });
     seajs.use('start');
 </script>

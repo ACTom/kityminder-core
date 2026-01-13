@@ -236,6 +236,9 @@ define(function(require, exports, module) {
                         
             // 给文字添加双击事件
             this.textShape.on('dblclick', function(e) {
+                // 先选中连接线
+                self.select();
+                // 触发双击事件
                 minder.fire('hyperconnectiondblclick', {
                     connection: self,
                     data: self.data,
@@ -286,6 +289,13 @@ define(function(require, exports, module) {
             minder.on('selectionchange', function() {
                 self.deselect();
             });
+
+            // 监听其他连接线被选中，取消自己的选中
+            minder.on('hyperconnectionselect', function(e) {
+                if (e.connection !== self) {
+                    self.deselect();
+                }
+            });
         },
 
         initHandleDrag: function(handle, index) {
@@ -307,6 +317,21 @@ define(function(require, exports, module) {
                 var cpKey = 'controlPoint' + index;
                 startControlPoint = self.data[cpKey] || {x: 0, y: 0};
                 
+                e.stopPropagation();
+                e.preventDefault();
+            });
+
+            // 双击控制点，等同于双击连接线
+            handle.on('dblclick', function(e) {
+                // 先选中连接线
+                self.select();
+                // 触发双击事件
+                minder.fire('hyperconnectiondblclick', {
+                    connection: self,
+                    data: self.data,
+                    shape: self,
+                    event: e
+                });
                 e.stopPropagation();
                 e.preventDefault();
             });
@@ -347,6 +372,9 @@ define(function(require, exports, module) {
         },
 
         select: function() {
+            // 触发连接线选中事件，其他连接线会监听并取消选中
+            this.minder.fire('hyperconnectionselect', { connection: this });
+            
             this.isSelected = true;
             this.showHandles();
             this.path.stroke(this.data.color || '#666', (this.data.strokeWidth || 2) + 1);
@@ -464,23 +492,29 @@ define(function(require, exports, module) {
         calculateControlPoints: function(start, end) {
             var dx = end.x - start.x;
             var dy = end.y - start.y;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+
+            // 防止除以零
+            if (dist < 1) dist = 1;
 
             // 默认控制点位置（自动计算）
-            // 控制线最多 1/4 长度，避免过长影响双击
             var defaultCp1, defaultCp2;
-            var controlFactor = 0.25; // 控制线长度为连线的 1/4
+            var controlFactor = 0.3;  // 控制点沿连线方向的偏移比例
+            var curvature = Math.min(30, dist * 0.15);  // 默认弧度，根据距离自适应
             
-            if (Math.abs(dx) > Math.abs(dy)) {
-                // 水平方向为主
-                var offsetX = dx * controlFactor;
-                defaultCp1 = {x: start.x + offsetX, y: start.y};
-                defaultCp2 = {x: end.x - offsetX, y: end.y};
-            } else {
-                // 垂直方向为主
-                var offsetY = dy * controlFactor;
-                defaultCp1 = {x: start.x, y: start.y + offsetY};
-                defaultCp2 = {x: end.x, y: end.y - offsetY};
-            }
+            // 计算垂直于连线方向的单位向量
+            var perpX = dy / dist;
+            var perpY = -dx / dist;
+            
+            // 控制点位置 = 沿连线方向偏移 + 垂直方向弧度偏移
+            defaultCp1 = {
+                x: start.x + dx * controlFactor + perpX * curvature,
+                y: start.y + dy * controlFactor + perpY * curvature
+            };
+            defaultCp2 = {
+                x: end.x - dx * controlFactor + perpX * curvature,
+                y: end.y - dy * controlFactor + perpY * curvature
+            };
 
             // 应用用户的偏移量
             var offset1 = this.data.controlPoint1 || {x: 0, y: 0};
@@ -738,9 +772,13 @@ define(function(require, exports, module) {
         },
 
         _removeHyperConnectionShape: function(connectionId) {
-            var shape = this._hyperConnectionContainer.getShapeById('hyperconn_' + connectionId);
-            if (shape) {
-                this._hyperConnectionContainer.removeShape(shape);
+            var shapes = this._hyperConnectionContainer.getShapes();
+            var targetId = 'hyperconn_' + connectionId;
+            for (var i = 0; i < shapes.length; i++) {
+                if (shapes[i].getId() === targetId) {
+                    this._hyperConnectionContainer.removeShape(shapes[i]);
+                    break;
+                }
             }
         },
 
