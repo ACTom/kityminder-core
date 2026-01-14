@@ -200,12 +200,13 @@
     // 监听连接线双击事件 - 编辑连接线文字
     km.on('hyperconnectiondblclick', function(e) {
         var connection = e.connection;
+        var data = e.data;
         var currentText = connection.getText();
         var newText = prompt('输入连接线文字（留空则删除）:', currentText);
         
         if (newText !== null) {
-            connection.setText(newText);
-            km.fire('contentchange');
+            // 使用命令更新连接线文字
+            km.execCommand('SetHyperConnectionText', data.id, newText);
         }
     });
     

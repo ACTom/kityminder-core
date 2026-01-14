@@ -311,6 +311,8 @@ define(function(require, exports, module) {
             var minder = this.minder;
             var startPos = null;
             var startControlPoint = null;
+            var startControlPoint1 = null;  // 保存拖拽开始时的控制点1
+            var startControlPoint2 = null;  // 保存拖拽开始时的控制点2
             var draggingHandleIndex = null; // 记录当前拖拽的控制点索引
 
             handle.on('mousedown', function(e) {
@@ -324,6 +326,9 @@ define(function(require, exports, module) {
                 // 保存当前控制点位置
                 var cpKey = 'controlPoint' + index;
                 startControlPoint = self.data[cpKey] || {x: 0, y: 0};
+                // 保存两个控制点的初始值，用于命令
+                startControlPoint1 = {x: (self.data.controlPoint1 || {x: 0, y: 0}).x, y: (self.data.controlPoint1 || {x: 0, y: 0}).y};
+                startControlPoint2 = {x: (self.data.controlPoint2 || {x: 0, y: 0}).x, y: (self.data.controlPoint2 || {x: 0, y: 0}).y};
                 
                 e.stopPropagation();
                 e.preventDefault();
@@ -367,13 +372,35 @@ define(function(require, exports, module) {
                 document.addEventListener('mouseup', function mouseup() {
                     // 只处理当前控制点的释放
                     if (self.isDragging && draggingHandleIndex === index) {
+                        // 获取新的控制点位置
+                        var newControlPoint1 = {x: (self.data.controlPoint1 || {x: 0, y: 0}).x, y: (self.data.controlPoint1 || {x: 0, y: 0}).y};
+                        var newControlPoint2 = {x: (self.data.controlPoint2 || {x: 0, y: 0}).x, y: (self.data.controlPoint2 || {x: 0, y: 0}).y};
+                        
+                        // 检查是否有变化
+                        var hasChange = (newControlPoint1.x !== startControlPoint1.x || 
+                                        newControlPoint1.y !== startControlPoint1.y ||
+                                        newControlPoint2.x !== startControlPoint2.x || 
+                                        newControlPoint2.y !== startControlPoint2.y);
+                        
+                        if (hasChange) {
+                            // 先恢复到初始值，然后用命令设置新值
+                            self.data.controlPoint1 = startControlPoint1;
+                            self.data.controlPoint2 = startControlPoint2;
+                            
+                            // 使用命令设置控制点，支持撤销重做
+                            minder.execCommand('SetHyperConnectionControlPoint', 
+                                self.data.id, 
+                                newControlPoint1, 
+                                newControlPoint2
+                            );
+                        }
+                        
                         self.isDragging = false;
                         startPos = null;
                         startControlPoint = null;
+                        startControlPoint1 = null;
+                        startControlPoint2 = null;
                         draggingHandleIndex = null;
-                        
-                        // 触发内容变化事件
-                        minder.fire('contentchange');
                     }
                 });
             }
@@ -738,6 +765,38 @@ define(function(require, exports, module) {
     });
 
     /**
+     * 设置连接线文字命令
+     */
+    var SetHyperConnectionTextCommand = kity.createClass('SetHyperConnectionTextCommand', {
+        base: Command,
+
+        execute: function(minder, connectionId, text) {
+            var shape = minder._getHyperConnectionShape(connectionId);
+            if (shape) {
+                shape.setText(text);
+                minder.fire('contentchange');
+            }
+        }
+    });
+
+    /**
+     * 设置连接线控制点命令
+     */
+    var SetHyperConnectionControlPointCommand = kity.createClass('SetHyperConnectionControlPointCommand', {
+        base: Command,
+
+        execute: function(minder, connectionId, controlPoint1, controlPoint2) {
+            var shape = minder._getHyperConnectionShape(connectionId);
+            if (shape) {
+                shape.data.controlPoint1 = controlPoint1;
+                shape.data.controlPoint2 = controlPoint2;
+                shape.update();
+                minder.fire('contentchange');
+            }
+        }
+    });
+
+    /**
      * 在 Minder 上扩展超连接相关方法
      */
     kity.extendClass(Minder, {
@@ -809,6 +868,17 @@ define(function(require, exports, module) {
                     }
                 }
             }
+        },
+
+        _getHyperConnectionShape: function(connectionId) {
+            var shapes = this._hyperConnectionContainer.getShapes();
+            var targetId = 'hyperconn_' + connectionId;
+            for (var i = 0; i < shapes.length; i++) {
+                if (shapes[i].getId() === targetId) {
+                    return shapes[i];
+                }
+            }
+            return null;
         }
     });
 
@@ -835,7 +905,9 @@ define(function(require, exports, module) {
         commands: {
             'StartHyperConnection': StartHyperConnectionCommand,
             'AddHyperConnection': AddHyperConnectionCommand,
-            'RemoveHyperConnection': RemoveHyperConnectionCommand
+            'RemoveHyperConnection': RemoveHyperConnectionCommand,
+            'SetHyperConnectionText': SetHyperConnectionTextCommand,
+            'SetHyperConnectionControlPoint': SetHyperConnectionControlPointCommand
         },
 
         events: {
@@ -986,6 +1058,7 @@ define(function(require, exports, module) {
                         sourceNode, 
                         targetNode, 
                         {
+                            text: '连接',
                             type: 'arrow',
                             color: '#4285f4',
                             strokeWidth: 2

@@ -28,6 +28,56 @@ define(function(require, exports, module) {
         var changed = path.shift();
         var node;
 
+        // 处理连接线的变化
+        if (changed == 'connections') {
+            var connections = minder.getHyperConnections();
+            var index = parseInt(path.shift());
+            
+            // 处理整个连接线的操作
+            if (path.length === 0) {
+                switch (patch.op) {
+                    case 'add':
+                        connections.splice(index, 0, patch.value);
+                        break;
+                    case 'remove':
+                        connections.splice(index, 1);
+                        break;
+                    case 'replace':
+                        connections[index] = patch.value;
+                        break;
+                }
+            } else {
+                // 处理连接线的字段操作（如 text, controlPoint1, controlPoint1/x 等）
+                var conn = connections[index];
+                if (conn) {
+                    var target = conn;
+                    // 遍历到父级对象
+                    while (path.length > 1) {
+                        var field = path.shift();
+                        if (!(field in target)) {
+                            target[field] = {};
+                        }
+                        target = target[field];
+                    }
+                    var lastField = path.shift();
+                    
+                    switch (patch.op) {
+                        case 'add':
+                        case 'replace':
+                            target[lastField] = patch.value;
+                            break;
+                        case 'remove':
+                            delete target[lastField];
+                            break;
+                    }
+                }
+            }
+            // 重新渲染所有连接线
+            minder._renderAllHyperConnections();
+            minder.fire('patch', { 'patch' : patch } );
+            return;
+        }
+
         if (changed == 'root') {
 
             var dataIndex = path.indexOf('data');

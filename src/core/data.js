@@ -84,6 +84,8 @@ define(function(require, exports, module) {
             // 导出自由关联线数据
             if (this._hyperConnections && this._hyperConnections.length > 0) {
                 json.connections = this._hyperConnections;
+            } else {
+                json.connections = [];
             }
 
             return JSON.parse(JSON.stringify(json));

@@ -235,11 +235,8 @@
             var newText = prompt('输入连接线文字（留空则删除）:', currentText);
             
             if (newText !== null) {
-                // 更新连接线文字
-                connection.setText(newText);
-                
-                // 触发内容变化事件
-                km.fire('contentchange');
+                // 使用命令更新连接线文字
+                km.execCommand('SetHyperConnectionText', data.id, newText);
             }
         });
         
